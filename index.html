@@ -63,13 +63,32 @@ a{color:#7EAEFF;text-decoration:none}
 .sumbox{background:#161F30;border:1px solid #24334F;border-radius:12px;padding:10px 14px;font-size:.82rem;color:#93A1BC}.sumbox b{display:block;font-size:1.3rem;color:#fff;font-weight:900}
 footer{padding:24px;font-size:.78rem;color:#64748F;text-align:center;line-height:2}
 @media (max-width:680px){.topbar{padding:10px 14px;flex-wrap:wrap}.area,.opts,.bar-bottom,.palette{margin-left:14px;margin-right:14px}.units{padding:14px 14px}}
+
+.exh img{max-height:340px;width:100%;object-fit:contain;background:#fff;display:block}
+.exh a.full{font-size:.75rem;color:#3D7DFF;text-decoration:none;font-weight:700;margin-right:8px}
+@media (max-width:680px){
+.topbar{font-size:.72rem;padding:9px 12px;flex-wrap:wrap;gap:8px}
+.cnt{padding:4px 8px;font-size:.75rem}
+.area{margin:10px 10px;padding:14px}
+.opts{padding:6px 10px 12px}
+.opt{padding:12px 12px;font-size:.88rem}
+.bar-bottom{padding:12px 10px}
+.btn{padding:11px 14px}
+.subbar{padding:10px 12px 4px}
+.palette{padding:12px 12px 18px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(32px,1fr));gap:5px}
+.hero{padding:30px 12px 18px}
+.units{padding:12px 12px}
+.summary-bar{padding:12px}
+.hero h1{font-size:1.35rem}
+}
 </style>
 </head>
 <body>
 <div class="topbar">
   <div>⏱ <b id="timer">00:00</b> <span id="qcount">—</span></div>
   <div class="tb-mid"><div class="cnt bad">✕ <b id="cWrong">0</b></div><div class="cnt ok">✓ <b id="cOk">0</b></div></div>
-  <div class="tb-nav"><a href="#" onclick="goHome(event)">🏠 الرئيسية</a> <a href="#" onclick="confirmReset()" style="background:rgba(255,255,255,.06)">↻ ريست</a></div>
+  <div class="tb-nav"><a href="#" id="snd" onclick="return toggleSound()" title="كتم/تشغيل الصوت">🔊</a><a href="#" onclick="goHome(event)">🏠 الرئيسية</a> <a href="#" onclick="confirmReset()" style="background:rgba(255,255,255,.06)">↻ ريست</a></div>
 </div>
 <div class="stepper" id="stepper" style="display:none"><div class="fill" id="stepFill"></div></div>
 <div class="subbar" id="subbar" style="display:none"></div>
@@ -228,7 +247,7 @@ function renderQuiz(){
   document.getElementById('subbar').innerHTML='<button class="bm" onclick="toggleBM('+mi+')">'+(s.bookmark?'★':'☆')+'</button><span class="pill ghost">DP-600 Source Bank</span><span class="pill purple">#'+(mi+1)+'</span><span class="pill blue">'+tBad+'</span>';
   const opts=cq.o.map(function(t,i){let cls='opt';const selH=sel.has(i)?' sel':'';if(s.graded){if(cq.a.indexOf(i)>=0)cls+=' correct';else if(sel.has(i))cls+=' wrong';}return '<label class="'+cls+'"><input type="'+(cq.t==='multi'?'checkbox':'radio')+'" name="o" value="'+i+'"'+(selH?' checked':'')+' '+(s.graded?'disabled':'')+' style="position:absolute;opacity:0;width:0;height:0" onchange="pick('+i+')"><span class="key">'+'ABCDEF'[i]+'</span><span class="txt">'+esc(t)+'</span></label>'}).join('');
   let fb='';if(s.graded){const L=cq.a.map(function(i){return 'ABCDEF'[i]}).join('، ');fb=(s.correct?'<div class="fb-head">✓ إجابة صحيحة — أحسنت!</div>':'<div class="fb-head">✕ إجابة غير صحيحة</div><div>الإجابة الصحيحة: <b>'+L+'</b></div>')+'<div style="font-size:.85rem;color:#93A1BC;margin-top:6px"><span class="fb-why">'+esc(cq.w)+'</span><br><a href="'+cq.r+'" target="_blank" rel="noopener" style="font-size:.78rem">المرجع على Microsoft Learn ↗</a></div>'}
-  let exh='';if(cq.pg){exh='<div class="exh" style="border:1px solid #E2E8F0;border-radius:8px;margin-top:8px;overflow:hidden"><div class="exh-cap">معروض من صفحة PDF الأصلية: '+cq.pg+'</div><img src="assets/'+cq.pg+'.png" alt="exhibit #'+cq.n+'" loading="lazy"></div>'}
+  let exh='';if(cq.pg){exh='<div class="exh" style="border:1px solid #E2E8F0;border-radius:8px;margin-top:8px;overflow:hidden"><div class="exh-cap">معروض مقتصّ من الصفحة الأصلية: '+cq.pg+' <a class="full" href="assets/'+cq.pg+'.png" target="_blank" rel="noopener">📄 الصفحة كاملة ↗</a></div><img src="assets/c/'+cq.pg+'.png" alt="exhibit #'+cq.n+'" loading="lazy"></div>'}
   document.getElementById('view').innerHTML=
     '<div class="area"><h3>Answer Area</h3><p>'+esc(cq.q)+'</p>'+exh+'</div>'+
     (cq.t==='multi'?'<div style="font-size:.78rem;color:#64748F;padding:0 22px;margin-top:4px">حدد كل الإجابات الصحيحة. يُحسب التصحيح فقط عند تطابق اختيارك مع كل الإجابات.</div>':'')+
@@ -239,7 +258,7 @@ function renderQuiz(){
 }
 function palHTML(){const mq=modeQs();return '<section class="palette"><div class="pal-head"><div class="pal-title">انتقل إلى سؤال <span class="pill ghost" style="margin-right:6px">'+gradedN(mq)+' / '+mq.length+'</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pfbtn" onclick="jumpNext(\'next\')">التالي →</button><button class="pfbtn blue" onclick="jumpNext(\'unanswered\')">غير مجاب</button><button class="pfbtn red" onclick="jumpNext(\'wrong\')">خطأ</button></div></div><div class="grid">'+mq.map(function(q,i){const mi2=miOf(q);const s2=state[mi2]||{};const cls=['gcell'];if(i===cur)cls.push('cur');if(s2.graded)cls.push(s2.correct?'okk':'ng');if(s2.bookmark&&!s2.graded)cls.push('okk');return '<button class="'+cls.join(' ')+'" onclick="jumpTo('+i+')">'+(mi2+1)+'</button>'}).join('')+'</div></section>'}
 function pick(i){const q=modeQs()[cur];const mi=miOf(q);const s=state[mi];if(s.graded)return;if(q.t==='multi'){if(sel.has(i))sel.delete(i);else sel.add(i)}else{sel=new Set([i])}s.selected=Array.from(sel);render()}
-function confirmAns(){const q=modeQs()[cur];const mi=miOf(q);const s=state[mi];if(!sel.size){alert('اختر إجابة قبل التأكيد.');return}const w=q.a.slice().sort((a,b)=>a-b),g=Array.from(sel).sort((a,b)=>a-b);s.graded=true;s.correct=(w.length===g.length&&w.every((v,i)=>v===g[i]));s.selected=Array.from(sel);saveSt();render()}
+function confirmAns(){const q=modeQs()[cur];const mi=miOf(q);const s=state[mi];if(!sel.size){alert('اختر إجابة قبل التأكيد.');return}const w=q.a.slice().sort((a,b)=>a-b),g=Array.from(sel).sort((a,b)=>a-b);s.graded=true;s.correct=(w.length===g.length&&w.every((v,i)=>v===g[i]));s.selected=Array.from(sel);if(s.correct){sfxOK()}else{sfxBad()}saveSt();render()}
 function goPrev(){if(cur>0){cur--;render()}}function goNext(){if(cur<modeQs().length-1){cur++;render()}}function toggleBM(mi){state[mi].bookmark=!state[mi].bookmark;saveSt();render()}
 function jumpTo(i){cur=i;render()}function jumpNext(kind){const n=modeQs().length;for(let s0=1;s0<=n;s0++){const i=(cur+s0)%n;const q=modeQs()[i];const st=state[miOf(q)]||{};const ok=(kind==='unanswered')?!st.graded:(kind==='wrong')?(st.graded&&!st.correct):true;if(ok){cur=i;render();return}}}
 function finishNow(){view='results';stopT();render()}
@@ -256,6 +275,13 @@ function renderResults(){
     (wrongs.length?'':'<div style="text-align:center;color:#22C55E;font-weight:900;padding:10px">🎉 لا أخطاء — ممتاز!</div>')+
     '<footer style="padding:20px">حالة الإجابات محفوظة محليًا (localStorage). اضغط «ريست» للبدء من جديد.</footer>';
 }
+
+let soundOn=true;
+function playTone(ac,freq,delay,dur,type,vol){var o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=freq;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(0.0001,ac.currentTime+delay);g.gain.exponentialRampToValueAtTime(vol,ac.currentTime+delay+0.02);g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+delay+dur);o.start(ac.currentTime+delay);o.stop(ac.currentTime+delay+dur+0.06);}
+function sfxOK(){if(!soundOn)return;try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;var ac=new C();playTone(ac,740,0,0.16,'sine',0.16);playTone(ac,988,0.10,0.18,'sine',0.16);playTone(ac,1319,0.20,0.30,'sine',0.14);setTimeout(function(){ac.close()},800);}catch(e){}}
+function sfxBad(){if(!soundOn)return;try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;var ac=new C();playTone(ac,220,0,0.22,'square',0.09);playTone(ac,165,0.14,0.32,'square',0.09);setTimeout(function(){ac.close()},800);}catch(e){}}
+function toggleSound(){soundOn=!soundOn;var b=document.getElementById('snd');if(b)b.textContent=soundOn?'🔊':'🔇';return false;}
+
 state=loadSt();
 </script>
 </body>
